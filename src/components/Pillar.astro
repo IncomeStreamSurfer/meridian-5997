@@ -1,0 +1,16 @@
+---
+interface Props {
+  index: string;
+  title: string;
+  body: string;
+}
+const { index, title, body } = Astro.props;
+---
+<article class="group relative flex flex-col gap-4 border-t border-[color:var(--color-mist)]/30 pt-8">
+  <div class="flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-[color:var(--color-mist)]">
+    <span>{index}</span>
+    <span class="h-px flex-1 bg-[color:var(--color-mist)]/30 transition group-hover:bg-[color:var(--color-copper)]"></span>
+  </div>
+  <h3 class="font-[family-name:var(--font-display)] text-2xl font-light leading-tight">{title}</h3>
+  <p class="max-w-sm text-sm leading-relaxed text-[color:var(--color-mist)]">{body}</p>
+</article>

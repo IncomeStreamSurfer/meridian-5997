@@ -1,0 +1,101 @@
+---
+interface Props {
+  source?: string;
+  id?: string;
+  buttonLabel?: string;
+}
+const { source = "landing-hero", id = "capture", buttonLabel = "Notify me" } = Astro.props;
+---
+<form
+  id={id}
+  data-source={source}
+  class="meridian-capture group relative mx-auto flex w-full max-w-md flex-col gap-3 sm:flex-row"
+  novalidate
+>
+  <label class="sr-only" for={`${id}-email`}>Email address</label>
+  <div class="relative flex-1">
+    <input
+      id={`${id}-email`}
+      name="email"
+      type="email"
+      required
+      autocomplete="email"
+      placeholder="you@yourdomain.com"
+      class="h-12 w-full rounded-full border border-[color:var(--color-mist)]/40 bg-[color:var(--color-bone)]/70 px-5 text-sm text-[color:var(--color-ink)] outline-none placeholder:text-[color:var(--color-mist)] backdrop-blur transition focus:border-[color:var(--color-copper)] focus:ring-2 focus:ring-[color:var(--color-copper)]/30 dark:bg-[color:var(--color-ink)]/60 dark:text-[color:var(--color-bone)]"
+    />
+  </div>
+  <button
+    type="submit"
+    class="group/btn relative inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[color:var(--color-ink)] px-6 text-sm font-medium uppercase tracking-[0.18em] text-[color:var(--color-bone)] transition hover:bg-[color:var(--color-espresso)] disabled:opacity-60 dark:bg-[color:var(--color-bone)] dark:text-[color:var(--color-ink)] dark:hover:bg-[color:var(--color-cream)]"
+  >
+    <span class="label">{buttonLabel}</span>
+    <svg class="h-4 w-4 transition group-hover/btn:translate-x-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 12h14M13 5l7 7-7 7" />
+    </svg>
+  </button>
+  <p class="status pointer-events-none absolute -bottom-8 left-0 right-0 text-center text-xs tracking-wide text-[color:var(--color-mist)] opacity-0 transition"></p>
+</form>
+<script>
+  document.querySelectorAll<HTMLFormElement>("form.meridian-capture").forEach((form) => {
+    const status = form.querySelector<HTMLElement>(".status");
+    const btn = form.querySelector<HTMLButtonElement>("button[type=submit]");
+    const labelEl = btn?.querySelector<HTMLElement>(".label");
+    const originalLabel = labelEl?.textContent ?? "Notify me";
+
+    const setStatus = (msg: string, tone: "info" | "ok" | "err") => {
+      if (!status) return;
+      status.textContent = msg;
+      status.style.opacity = "1";
+      status.style.color =
+        tone === "ok"
+          ? "var(--color-copper)"
+          : tone === "err"
+          ? "#c8553d"
+          : "var(--color-mist)";
+    };
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!btn || !labelEl) return;
+      const email = (form.querySelector("input[name=email]") as HTMLInputElement)?.value?.trim();
+      if (!email) {
+        setStatus("Add an email, please.", "err");
+        return;
+      }
+      btn.disabled = true;
+      labelEl.textContent = "Sending…";
+      try {
+        const res = await fetch("/api/subscribe", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ email, source: form.dataset.source || "landing" }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          if (data.error === "invalid_email") {
+            setStatus("That email looks off. Try again.", "err");
+          } else {
+            setStatus("Something went wrong. Try again in a moment.", "err");
+          }
+          btn.disabled = false;
+          labelEl.textContent = originalLabel;
+          return;
+        }
+        labelEl.textContent = "On the list";
+        setStatus(
+          data.already ? "You're already on the list. See you soon." : "You're in. We'll be in touch.",
+          "ok",
+        );
+        form.reset();
+        setTimeout(() => {
+          labelEl.textContent = originalLabel;
+          btn.disabled = false;
+        }, 3500);
+      } catch (err) {
+        setStatus("Network hiccup. Try again.", "err");
+        btn.disabled = false;
+        labelEl.textContent = originalLabel;
+      }
+    });
+  });
+</script>
