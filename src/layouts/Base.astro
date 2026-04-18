@@ -1,0 +1,65 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "Meridian — Specialty Coffee, Coming Soon",
+  description = "Meridian is a specialty coffee roastery launching soon. Single-origin, small-batch, shipped fresh. Join the list for first access.",
+} = Astro.props;
+
+const siteUrl = import.meta.env.PUBLIC_SITE_URL ?? "https://meridian.coffee";
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={siteUrl} />
+    <meta property="og:site_name" content="Meridian" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Meridian",
+      "url": siteUrl,
+      "logo": `${siteUrl}/favicon.svg`,
+      "description": description,
+      "sameAs": []
+    })} />
+
+    <script is:inline>
+      (function () {
+        const stored = localStorage.getItem("meridian-theme");
+        const prefers = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const theme = stored || (prefers ? "dark" : "light");
+        if (theme === "dark") document.documentElement.classList.add("dark");
+      })();
+    </script>
+  </head>
+  <body class="grain relative min-h-screen">
+    <slot />
+  </body>
+</html>
